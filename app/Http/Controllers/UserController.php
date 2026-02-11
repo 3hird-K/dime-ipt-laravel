@@ -2,39 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $users = User::all();
         return response()->json($users);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+        
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
+        $validated['password'] = bcrypt($validated['password']);
+        
+        $user = User::create($validated);
 
         return response()->json($user, 201);
     }
@@ -45,7 +35,8 @@ class UserController extends Controller
     public function show(string $id)
     {
         $user = User::find($id);
-        if (! $user) {
+
+        if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
@@ -58,18 +49,19 @@ class UserController extends Controller
     public function update(Request $request, string $id)
     {
         $user = User::find($id);
-        if (! $user) {
+
+        if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'email' => ['sometimes','required','email', Rule::unique('users','email')->ignore($user->id)],
-            'password' => 'sometimes|required|string|min:6',
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($id)],
+            'password' => 'sometimes|required|string|min:8',
         ]);
 
-        if (array_key_exists('password', $validated)) {
-            $validated['password'] = Hash::make($validated['password']);
+        if (isset($validated['password'])) {
+            $validated['password'] = bcrypt($validated['password']);
         }
 
         $user->update($validated);
@@ -83,12 +75,13 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         $user = User::find($id);
-        if (! $user) {
+
+        if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
         $user->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'User deleted successfully']);
     }
 }
