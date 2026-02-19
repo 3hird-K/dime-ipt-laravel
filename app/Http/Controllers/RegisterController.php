@@ -39,9 +39,18 @@ class RegisterController extends Controller
             $user = Auth::user(); 
             $success['token'] =  $user->createToken('CuteKoYaa')->plainTextToken;
             $success['name'] =  $user->name;
+            $success['email'] =  $user->email;
+
             return (new ErrorHandlerController)->handleSendResponse($success, 'User logged in successfully.');
         }else{ 
             return (new ErrorHandlerController)->handleError('Unauthorized.');
         }
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return (new ErrorHandlerController)->handleSendResponse([], 'User logged out successfully.');
     }
 }
