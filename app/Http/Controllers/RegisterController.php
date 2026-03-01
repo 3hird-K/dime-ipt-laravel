@@ -18,6 +18,7 @@ class RegisterController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
             'confirm_password' => 'required|same:password',
+            'role' => 'required|in:' . User::ROLE_ADMIN . ',' . User::ROLE_CHAIRMAN,
         ]);
 
         if ($validator->fails()) {
@@ -25,24 +26,25 @@ class RegisterController extends Controller
         }
 
         $input = $request->all();
-        $input['password'] = bcrypt($input['password']);
+        $input['password'] = \Illuminate\Support\Facades\Hash::make($input['password']);
         $user = User::create($input);
-        $success['token'] =  $user->createToken('CuteKoYaa')->plainTextToken;
-        $success['name'] =  $user->name;
+        $success['token'] = $user->createToken('CuteKoYaa')->plainTextToken;
+        $success['name'] = $user->name;
 
         return (new ErrorHandlerController)->handleSendResponse($success, 'User registered successfully.');
     }
 
     public function login(Request $request)
     {
-        if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
-            $user = Auth::user(); 
-            $success['token'] =  $user->createToken('CuteKoYaa')->plainTextToken;
-            $success['name'] =  $user->name;
-            $success['email'] =  $user->email;
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            $user = Auth::user();
+            $success['token'] = $user->createToken('CuteKoYaa')->plainTextToken;
+            $success['name'] = $user->name;
+            $success['email'] = $user->email;
 
             return (new ErrorHandlerController)->handleSendResponse($success, 'User logged in successfully.');
-        }else{ 
+        }
+        else {
             return (new ErrorHandlerController)->handleError('Unauthorized.');
         }
     }
