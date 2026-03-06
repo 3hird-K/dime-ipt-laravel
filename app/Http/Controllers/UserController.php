@@ -4,18 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     public function index()
     {
+        Gate::authorize('viewAny', User::class);
         $users = User::all();
         return response()->json($users);
     }
         
     public function store(Request $request)
     {
+        Gate::authorize('create', User::class);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -40,6 +44,8 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        Gate::authorize('view', $user);
+
         return response()->json($user);
     }
 
@@ -53,6 +59,8 @@ class UserController extends Controller
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
+
+        Gate::authorize('update', $user);
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -79,6 +87,8 @@ class UserController extends Controller
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
+
+        Gate::authorize('delete', $user);
 
         $user->delete();
 
