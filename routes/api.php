@@ -34,10 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
         //     Route::delete('/{id}', 'destroy');
         // });
     
-        Route::middleware('role:' . User::ROLE_ADMIN . ',' . User::ROLE_CHAIRMAN)->group(function () {
-            Route::apiResource('users', UserController::class);
-        }
-        );
+        Route::apiResource('users', UserController::class);
 
         Route::post('logout', [RegisterController::class , 'logout']);
     });
